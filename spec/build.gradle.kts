@@ -5,7 +5,11 @@ plugins {
 	id("io.spring.dependency-management") version "1.1.5"
 	kotlin("jvm") version "1.9.24"
 	kotlin("plugin.spring") version "1.9.24"
+	// jpa no-args constructor
+	kotlin("plugin.jpa") version "1.9.0"
 	id("org.openapi.generator") version "6.2.0"
+	// query dsl
+	kotlin("kapt") version "1.8.10"
 }
 
 group = "com.openlab"
@@ -31,9 +35,25 @@ dependencies {
 	implementation("javax.annotation:javax.annotation-api:1.3.2")
 	implementation("javax.servlet:javax.servlet-api:4.0.1")
 	implementation("org.apache.httpcomponents.client5:httpclient5:5.2.1")
+	// kafka dependency
+	implementation("org.springframework.kafka:spring-kafka")
+	// jpa dependency
+	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+	implementation("mysql:mysql-connector-java")
+	// query dsl dependency
+	implementation("com.querydsl:querydsl-jpa")
+	kapt("com.querydsl:querydsl-apt:4.4.0:jpa")
+	// redis dependency
+	implementation("org.springframework.boot:spring-boot-starter-data-redis")
+	// openapi validator
+	implementation("io.swagger.parser.v3:swagger-parser-v3:2.0.31")
 
+
+	testImplementation("it.ozimov:embedded-redis:0.7.2")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+	// test kafka dependency
+	testImplementation("org.springframework.kafka:spring-kafka-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
@@ -46,18 +66,20 @@ kotlin {
 tasks.withType<Test> {
 	useJUnitPlatform()
 }
-
-
+// query dsl task
+kapt {
+	correctErrorTypes = true
+}
 // openapi 문서를 Generate하기 위한 설정
 task<GenerateTask>("generateApiDoc") {
 	generatorName.set("html2")
-	inputSpec.set("$projectDir/src/main/resources/openapi/spec-docs.yaml")
+	inputSpec.set("$projectDir/src/main/resources/spec-docs/openapi.yaml")
 	outputDir.set("$buildDir/openapi/doc/")
 }
 
 task<GenerateTask>("generateApiServer") {
 	generatorName.set("kotlin-spring")
-	inputSpec.set("$projectDir/src/main/resources/openapi/spec-docs.yaml")
+	inputSpec.set("$projectDir/src/main/resources/spec-docs/openapi.yaml")
 	outputDir.set("$buildDir/openapi/server-code/")
 	apiPackage.set("com.openlab.openapi_platform.openapi.generated.controller")
 	modelPackage.set("com.openlab.openapi_platform.openapi.generated.model")
